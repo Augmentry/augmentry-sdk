@@ -23,18 +23,18 @@ else:
 
 setup(
     name="augmentry",
-    version="1.0.0",
+    version="1.0.1",
     author="Augmentry Team",
     author_email="support@augmentry.io",
     description="Official Python SDK for the Augmentry API",
+    license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/augmentry-python-sdk",
+    url="https://github.com/augmentry/augmentry-python-sdk",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
@@ -60,8 +60,8 @@ setup(
     },
     keywords="augmentry api sdk solana crypto trading analytics",
     project_urls={
-        "Bug Reports": "https://github.com/your-username/augmentry-python-sdk/issues",
-        "Source": "https://github.com/your-username/augmentry-python-sdk",
+        "Bug Reports": "https://github.com/augmentry/augmentry-python-sdk/issues",
+        "Source": "https://github.com/augmentry/augmentry-python-sdk",
         "Documentation": "https://docs.augmentry.io",
     },
 )

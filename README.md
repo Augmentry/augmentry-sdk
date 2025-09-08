@@ -223,8 +223,8 @@ The API has rate limits in place. The SDK will automatically handle rate limit e
 ## Support
 
 - **Documentation**: [https://docs.augmentry.io](https://docs.augmentry.io)
-- **API Dashboard**: [https://augmentry.io/dashboard](https://augmentry.io/dashboard)
-- **Issues**: [GitHub Issues](https://github.com/your-username/augmentry-python-sdk/issues)
+- **API Dashboard**: [https://echelon.augmentry.io/](https://echelon.augmentry.io/)
+- **Issues**: [GitHub Issues](https://github.com/augmentry/augmentry-python-sdk/issues)
 - **Email**: support@augmentry.io
 
 ## License

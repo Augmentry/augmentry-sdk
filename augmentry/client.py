@@ -18,14 +18,14 @@ class AugmentryClient:
     
     Args:
         api_key: Your Augmentry API key
-        base_url: Base URL for the API (default: https://data.augmentry.io)
+        base_url: Base URL for the API (default: https://data.augmentry.io/api)
         timeout: Request timeout in seconds (default: 10)
     """
     
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://data.augmentry.io",
+        base_url: str = "https://data.augmentry.io/api",
         timeout: int = 10
     ):
         if not api_key:
@@ -136,111 +136,111 @@ class AugmentryClient:
         params = {}
         if limit:
             params['limit'] = limit
-        return await self._make_request('GET', '/api/tokens/all', params=params)
+        return await self._make_request('GET', '/tokens/all', params=params)
     
     async def get_new_tokens(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get newly created tokens"""
         params = {}
         if limit:
             params['limit'] = limit
-        return await self._make_request('GET', '/api/tokens/new', params=params)
+        return await self._make_request('GET', '/tokens/new', params=params)
     
     async def get_migrated_tokens(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get migrated tokens"""
         params = {}
         if limit:
             params['limit'] = limit
-        return await self._make_request('GET', '/api/tokens/migrated', params=params)
+        return await self._make_request('GET', '/tokens/migrated', params=params)
     
     # Market Data
     async def get_market_stats(self) -> Dict[str, Any]:
         """Get market statistics"""
-        return await self._make_request('GET', '/api/v1/market/stats')
+        return await self._make_request('GET', '/v1/market/stats')
     
     async def get_dashboard_stats(self) -> Dict[str, Any]:
         """Get dashboard statistics"""
-        return await self._make_request('GET', '/api/dashboard/stats')
+        return await self._make_request('GET', '/dashboard/stats')
     
     async def get_launchpad_stats(self) -> Dict[str, Any]:
         """Get launchpad statistics"""
-        return await self._make_request('GET', '/api/launchpad/stats')
+        return await self._make_request('GET', '/launchpad/stats')
     
     # AI Analysis
     async def get_ai_analysis(self, token_address: str) -> Dict[str, Any]:
         """Get AI analysis for a token"""
         params = {'token': token_address}
-        return await self._make_request('GET', '/api/ai-analysis', params=params)
+        return await self._make_request('GET', '/ai-analysis', params=params)
     
     # Wallet Endpoints
     async def get_wallet_basic(self, address: str) -> Dict[str, Any]:
         """Get basic wallet information"""
-        return await self._make_request('GET', f'/api/wallet/{address}/basic')
+        return await self._make_request('GET', f'/wallet/{address}/basic')
     
     async def get_wallet_pnl(self, address: str, days: Optional[int] = None) -> Dict[str, Any]:
         """Get wallet PnL data"""
         params = {}
         if days:
             params['days'] = days
-        return await self._make_request('GET', f'/api/wallet/{address}/pnl', params=params)
+        return await self._make_request('GET', f'/wallet/{address}/pnl', params=params)
     
     async def get_wallet_token_pnl(self, address: str, token: str) -> Dict[str, Any]:
         """Get wallet PnL for specific token"""
-        return await self._make_request('GET', f'/api/wallet/{address}/token/{token}/pnl')
+        return await self._make_request('GET', f'/wallet/{address}/token/{token}/pnl')
     
     async def get_wallet_trades(self, address: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get wallet trade history"""
         params = {}
         if limit:
             params['limit'] = limit
-        return await self._make_request('GET', f'/api/wallet/{address}/trades', params=params)
+        return await self._make_request('GET', f'/wallet/{address}/trades', params=params)
     
     async def get_wallet_chart(self, address: str, days: Optional[int] = None) -> Dict[str, Any]:
         """Get wallet performance chart data"""
         params = {}
         if days:
             params['days'] = days
-        return await self._make_request('GET', f'/api/wallet/{address}/chart', params=params)
+        return await self._make_request('GET', f'/wallet/{address}/chart', params=params)
     
     async def get_wallets_batch_pnl(self, addresses: List[str]) -> Dict[str, Any]:
         """Get PnL data for multiple wallets"""
         data = {'addresses': addresses}
-        return await self._make_request('POST', '/api/wallets/batch-pnl', data=data)
+        return await self._make_request('POST', '/wallets/batch-pnl', data=data)
     
     # Top Traders
     async def get_top_traders_all(self, page: Optional[int] = None) -> Dict[str, Any]:
         """Get all top traders"""
         if page:
-            return await self._make_request('GET', f'/api/top-traders/all/{page}')
-        return await self._make_request('GET', '/api/top-traders/all')
+            return await self._make_request('GET', f'/top-traders/all/{page}')
+        return await self._make_request('GET', '/top-traders/all')
     
     async def get_top_traders_for_token(self, token: str) -> List[Dict[str, Any]]:
         """Get top traders for specific token"""
-        return await self._make_request('GET', f'/api/top-traders/{token}')
+        return await self._make_request('GET', f'/top-traders/{token}')
     
     async def get_top_traders_by_timeframe(self, timeframe: str) -> List[Dict[str, Any]]:
         """Get top traders by timeframe (e.g., '24h', '7d', '30d')"""
-        return await self._make_request('GET', f'/api/top-traders/{timeframe}')
+        return await self._make_request('GET', f'/top-traders/{timeframe}')
     
     # First Buyers
     async def get_first_buyers(self, token: str) -> List[Dict[str, Any]]:
         """Get first buyers for a token"""
-        return await self._make_request('GET', f'/api/first-buyers/{token}')
+        return await self._make_request('GET', f'/first-buyers/{token}')
     
     async def get_tokens_batch_first_buyers(self, tokens: List[str]) -> Dict[str, Any]:
         """Get first buyers for multiple tokens"""
         data = {'tokens': tokens}
-        return await self._make_request('POST', '/api/tokens/batch-first-buyers', data=data)
+        return await self._make_request('POST', '/tokens/batch-first-buyers', data=data)
     
     # API Usage
     async def get_usage_stats(self, days: Optional[int] = 30) -> Dict[str, Any]:
         """Get API usage statistics"""
         params = {'days': days} if days else {}
-        return await self._make_request('GET', '/api/usages', params=params)
+        return await self._make_request('GET', '/usages', params=params)
     
     async def get_recent_usage(self, limit: Optional[int] = 50) -> List[Dict[str, Any]]:
         """Get recent API usage"""
         params = {'limit': limit} if limit else {}
-        return await self._make_request('GET', '/api/usages/recent', params=params)
+        return await self._make_request('GET', '/usages/recent', params=params)
     
     # Utility methods
     async def close(self):

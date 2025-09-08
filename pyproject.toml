@@ -4,17 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "augmentry"
-version = "1.0.0"
+version = "1.0.1"
 description = "Official Python SDK for the Augmentry API"
 readme = "README.md"
 authors = [
     {name = "Augmentry Team", email = "support@augmentry.io"}
 ]
-license = {text = "MIT"}
+license = "MIT"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -30,10 +29,10 @@ dependencies = [
 keywords = ["augmentry", "api", "sdk", "solana", "crypto", "trading", "analytics"]
 
 [project.urls]
-Homepage = "https://github.com/your-username/augmentry-python-sdk"
+Homepage = "https://github.com/augmentry/augmentry-python-sdk"
 Documentation = "https://docs.augmentry.io"
-Repository = "https://github.com/your-username/augmentry-python-sdk"
-"Bug Reports" = "https://github.com/your-username/augmentry-python-sdk/issues"
+Repository = "https://github.com/augmentry/augmentry-python-sdk"
+"Bug Reports" = "https://github.com/augmentry/augmentry-python-sdk/issues"
 
 [project.optional-dependencies]
 dev = [
