@@ -50,10 +50,10 @@ class AugmentryClient:
         """Ensure aiohttp session exists"""
         if not self._session or self._session.closed:
             headers = {
-                'x-api-key': self.api_key,
+                'Authorization': f'Bearer {self.api_key}',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'User-Agent': 'Augmentry-Python-SDK/1.0.0'
+                'User-Agent': 'Augmentry-Python-SDK/1.1.0'
             }
             
             timeout = aiohttp.ClientTimeout(total=self.timeout)
@@ -320,9 +320,13 @@ class AugmentryClient:
             params['limit'] = limit
         return await self._make_request('GET', f'/trades/{token_address}/{pool_address}/user/{wallet_address}', params=params)
     
+    async def get_top_traders_all(self) -> Dict[str, Any]:
+        """Get top traders for all tokens"""
+        return await self._make_request('GET', '/top-traders/all')
+    
     async def get_top_traders(self, token_address: str) -> List[Dict[str, Any]]:
         """Top performing traders ranked by P&L for specific token"""
-        return await self._make_request('GET', f'/traders/{token_address}/top')
+        return await self._make_request('GET', f'/top-traders/{token_address}')
     
     async def get_first_buyers(self, token_address: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """First buyers with current P&L since purchase"""
@@ -425,16 +429,36 @@ class SyncAugmentryClient:
     
     def __init__(self, api_key: str, **kwargs):
         self._client = AugmentryClient(api_key, **kwargs)
+        
+    def __enter__(self):
+        """Context manager entry"""
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensures cleanup"""
+        self.close()
     
     def _run_async(self, coro):
         """Run an async coroutine in a sync context"""
         try:
             loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Create a new loop if the current one is running
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(asyncio.run, coro)
+                    return future.result()
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
         
-        return loop.run_until_complete(coro)
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            # Clean up any pending tasks
+            pending = asyncio.all_tasks(loop) if hasattr(asyncio, 'all_tasks') else asyncio.Task.all_tasks(loop)
+            for task in pending:
+                task.cancel()
     
     # Token Endpoints
     def get_token(self, token_address: str) -> Dict[str, Any]:
@@ -545,6 +569,9 @@ class SyncAugmentryClient:
         limit: Optional[int] = None
     ) -> Dict[str, Any]:
         return self._run_async(self._client.get_user_pool_trades(token_address, pool_address, wallet_address, cursor, limit))
+    
+    def get_top_traders_all(self) -> Dict[str, Any]:
+        return self._run_async(self._client.get_top_traders_all())
     
     def get_top_traders(self, token_address: str) -> List[Dict[str, Any]]:
         return self._run_async(self._client.get_top_traders(token_address))

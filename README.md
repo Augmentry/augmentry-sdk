@@ -18,17 +18,17 @@ from augmentry import AugmentryClient
 
 async def main():
     async with AugmentryClient(api_key="your_api_key") as client:
+        # Get account credits
+        credits = await client.get_account_credits()
+        print(credits)
+        
         # Get token information
         token_info = await client.get_token("token_address")
-        print(f"Token: {token_info['name']} - Price: ${token_info['price']}")
+        print(token_info)
         
-        # Get real-time price
-        price_data = await client.get_price("token_address")
-        print(f"Current Price: ${price_data['price']}")
-        
-        # Get wallet PnL
-        pnl = await client.get_pnl("wallet_address")
-        print(f"Total PnL: ${pnl['totalPnL']}")
+        # Get recent trades
+        trades = await client.get_trades("token_address", limit=5)
+        print(trades)
 
 # Run async function
 asyncio.run(main())
@@ -39,16 +39,20 @@ asyncio.run(main())
 ```python
 from augmentry import SyncAugmentryClient
 
-# Create client
+# Using context manager (recommended)
+with SyncAugmentryClient(api_key="your_api_key") as client:
+    # Get account credits
+    credits = client.get_account_credits()
+    print(credits)
+    
+    # Get token information
+    token_info = client.get_token("token_address")
+    print(token_info)
+
+# Or without context manager
 client = SyncAugmentryClient(api_key="your_api_key")
-
-# Get token information
-token_info = client.get_token("token_address")
-print(f"Token: {token_info['name']} - Price: ${token_info['price']}")
-
-# Get wallet PnL
-pnl = client.get_pnl("wallet_address")
-print(f"Total PnL: ${pnl['totalPnL']}")
+credits = client.get_account_credits()
+client.close()  # Remember to close when done
 ```
 
 ## Authentication
@@ -94,6 +98,7 @@ client = AugmentryClient(
 - `get_trades(token_address, cursor=None, limit=None)` - Real-time trades across all pools
 - `get_pool_trades(token_address, pool_address, cursor=None, limit=None)` - Pool-specific trades
 - `get_user_pool_trades(token_address, pool_address, wallet_address, cursor=None, limit=None)` - User trades in pool
+- `get_top_traders_all()` - Get top traders for all tokens
 - `get_top_traders(token_address)` - Top performing traders for specific token
 - `get_first_buyers(token_address, limit=None)` - First buyers with current P&L
 
@@ -130,185 +135,6 @@ except AugmentryError as e:
     print(f"API error: {e}")
 ```
 
-## Examples
-
-### Analyze Token Performance
-
-```python
-import asyncio
-from augmentry import AugmentryClient
-
-async def analyze_token(token_address):
-    async with AugmentryClient(api_key="your_api_key") as client:
-        # Get comprehensive token information
-        token_info = await client.get_token(token_address)
-        print(f"Token: {token_info['name']} ({token_info['symbol']})")
-        print(f"Price: ${token_info['price']:,.6f}")
-        print(f"Market Cap: ${token_info['marketCap']:,.2f}")
-        
-        # Get price history for last 24h
-        price_history = await client.get_price_history(
-            token_address,
-            interval="1h",
-            start_time=int(time.time() - 86400)
-        )
-        
-        # Get top traders
-        top_traders = await client.get_top_traders(token_address)
-        print(f"\nTop Traders: {len(top_traders)}")
-        
-        # Get recent trades
-        trades = await client.get_trades(token_address, limit=10)
-        print(f"Recent Trades: {len(trades['data'])}")
-
-asyncio.run(analyze_token("your_token_address"))
-```
-
-### Track Wallet Performance
-
-```python
-import asyncio
-from augmentry import AugmentryClient
-
-async def track_wallet(wallet_address):
-    async with AugmentryClient(api_key="your_api_key") as client:
-        # Get wallet holdings
-        wallet = await client.get_wallet(wallet_address)
-        total_value = sum(token['usdValue'] for token in wallet['tokens'])
-        print(f"Total Portfolio Value: ${total_value:,.2f}")
-        
-        # Get PnL data
-        pnl = await client.get_pnl(wallet_address, show_historic_pnl=True)
-        print(f"Total PnL: ${pnl['totalPnL']:,.2f}")
-        print(f"24h PnL: ${pnl['pnl24h']:,.2f}")
-        print(f"30d PnL: ${pnl['pnl30d']:,.2f}")
-        
-        # Get recent trades
-        trades = await client.get_wallet_trades(
-            wallet_address,
-            limit=20,
-            parse_jupiter=True,
-            hide_arb=True
-        )
-        print(f"\nRecent Trades: {len(trades['data'])}")
-
-asyncio.run(track_wallet("your_wallet_address"))
-```
-
-### Monitor New Token Launches
-
-```python
-import asyncio
-from augmentry import AugmentryClient
-
-async def monitor_new_tokens():
-    async with AugmentryClient(api_key="your_api_key") as client:
-        # Get latest tokens
-        new_tokens = await client.get_latest_tokens(limit=10)
-        
-        for token in new_tokens:
-            # Get detailed token info
-            token_info = await client.get_token(token['mint'])
-            
-            # Get first buyers
-            first_buyers = await client.get_first_buyers(token['mint'], limit=5)
-            
-            # Check holder count
-            holders = await client.get_token_holders(token['mint'], limit=1)
-            
-            print(f"\nToken: {token_info['name']} ({token_info['symbol']})")
-            print(f"Mint: {token['mint']}")
-            print(f"Liquidity: ${token_info.get('liquidity', 0):,.2f}")
-            print(f"Holders: {holders.get('total', 0)}")
-            print(f"First Buyers: {len(first_buyers)}")
-            
-            # Show first buyer profits
-            for buyer in first_buyers[:3]:
-                print(f"  - {buyer['wallet']}: ${buyer.get('pnl', 0):,.2f} PnL")
-
-asyncio.run(monitor_new_tokens())
-```
-
-### Execute DEX Swap
-
-```python
-import asyncio
-from augmentry import AugmentryClient
-
-async def execute_swap():
-    async with AugmentryClient(api_key="your_api_key") as client:
-        # Get current priority fee
-        priority_fee = await client.get_priority_fee()
-        
-        # Execute swap
-        swap_result = await client.swap(
-            from_token="So11111111111111111111111111111111111111112",  # SOL
-            to_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",   # USDC
-            amount=1.0,  # 1 SOL
-            slippage=0.5,  # 0.5%
-            payer="your_wallet_address",
-            priority_fee=priority_fee['medium']
-        )
-        
-        print(f"Swap transaction: {swap_result['txid']}")
-
-asyncio.run(execute_swap())
-```
-
-### Search and Filter Tokens
-
-```python
-import asyncio
-from augmentry import AugmentryClient
-
-async def search_tokens():
-    async with AugmentryClient(api_key="your_api_key") as client:
-        # Search tokens with filters
-        results = await client.search_tokens(
-            q="BONK",  # Search query
-            min_liquidity=10000,  # Min $10k liquidity
-            max_liquidity=1000000,  # Max $1M liquidity
-            min_volume24h=5000,  # Min $5k daily volume
-            sort_by="volume24h",
-            sort_order="desc",
-            limit=10
-        )
-        
-        for token in results['data']:
-            print(f"\nToken: {token['name']} ({token['symbol']})")
-            print(f"Liquidity: ${token['liquidity']:,.2f}")
-            print(f"24h Volume: ${token['volume24h']:,.2f}")
-            print(f"Market Cap: ${token['marketCap']:,.2f}")
-
-asyncio.run(search_tokens())
-```
-
-### Get Historical Price Data
-
-```python
-import asyncio
-from augmentry import AugmentryClient
-import time
-
-async def get_price_analysis(token_address):
-    async with AugmentryClient(api_key="your_api_key") as client:
-        # Get current price with changes
-        current = await client.get_price(token_address, include_price_changes=True)
-        print(f"Current Price: ${current['price']:,.6f}")
-        print(f"24h Change: {current['change24h']:.2f}%")
-        
-        # Get ATH data
-        ath = await client.get_price_ath(token_address)
-        print(f"\nAll-Time High: ${ath['price']:,.6f}")
-        print(f"ATH Date: {ath['timestamp']}")
-        
-        # Get price at specific time (1 week ago)
-        week_ago = int(time.time()) - (7 * 24 * 3600)
-        historical = await client.get_price_at_timestamp(token_address, week_ago)
-        print(f"\nPrice 1 week ago: ${historical['price']:,.6f}")
-
-asyncio.run(get_price_analysis("your_token_address"))
-```
 
 ## Rate Limits
 

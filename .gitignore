@@ -151,3 +151,9 @@ Thumbs.db
 .env.production.local
 api_keys.txt
 secrets.json
+
+# Package development files
+test_auth.py
+upload_to_pypi.py
+release.py
+*.pyc

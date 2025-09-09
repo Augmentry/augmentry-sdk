@@ -23,7 +23,7 @@ else:
 
 setup(
     name="augmentry",
-    version="1.0.3",
+    version="1.1.0",
     author="Augmentry Team",
     author_email="support@augmentry.io",
     description="Official Python SDK for the Augmentry API",
