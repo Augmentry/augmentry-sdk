@@ -18,18 +18,17 @@ from augmentry import AugmentryClient
 
 async def main():
     async with AugmentryClient(api_key="your_api_key") as client:
-        # Get market stats
-        market_stats = await client.get_market_stats()
-        print(f"Total Volume: {market_stats['total_volume']}")
+        # Get token information
+        token_info = await client.get_token("token_address")
+        print(f"Token: {token_info['name']} - Price: ${token_info['price']}")
         
-        # Get new tokens
-        new_tokens = await client.get_new_tokens(limit=10)
-        for token in new_tokens:
-            print(f"Token: {token['name']} - {token['symbol']}")
+        # Get real-time price
+        price_data = await client.get_price("token_address")
+        print(f"Current Price: ${price_data['price']}")
         
         # Get wallet PnL
-        wallet_pnl = await client.get_wallet_pnl("wallet_address_here")
-        print(f"Total PnL: {wallet_pnl['total_pnl']}")
+        pnl = await client.get_pnl("wallet_address")
+        print(f"Total PnL: ${pnl['totalPnL']}")
 
 # Run async function
 asyncio.run(main())
@@ -43,18 +42,13 @@ from augmentry import SyncAugmentryClient
 # Create client
 client = SyncAugmentryClient(api_key="your_api_key")
 
-# Get market stats
-market_stats = client.get_market_stats()
-print(f"Total Volume: {market_stats['total_volume']}")
-
-# Get new tokens
-new_tokens = client.get_new_tokens(limit=10)
-for token in new_tokens:
-    print(f"Token: {token['name']} - {token['symbol']}")
+# Get token information
+token_info = client.get_token("token_address")
+print(f"Token: {token_info['name']} - Price: ${token_info['price']}")
 
 # Get wallet PnL
-wallet_pnl = client.get_wallet_pnl("wallet_address_here")
-print(f"Total PnL: {wallet_pnl['total_pnl']}")
+pnl = client.get_pnl("wallet_address")
+print(f"Total PnL: ${pnl['totalPnL']}")
 ```
 
 ## Authentication
@@ -66,49 +60,57 @@ from augmentry import AugmentryClient
 
 client = AugmentryClient(
     api_key="ak_your_api_key_here",
-    base_url="https://data.augmentry.io",  # Optional, this is the default
+    base_url="https://data.augmentry.io/api",  # Optional, this is the default
     timeout=10  # Optional timeout in seconds
 )
 ```
 
 ## Available Endpoints
 
-### Market Data
-- `get_market_stats()` - Get overall market statistics
-- `get_dashboard_stats()` - Get dashboard metrics
-- `get_launchpad_stats()` - Get launchpad statistics
-
 ### Token Information
-- `get_all_tokens(limit=None)` - Get all tokens
-- `get_new_tokens(limit=None)` - Get newly created tokens
-- `get_migrated_tokens(limit=None)` - Get migrated tokens
+- `get_token(token_address)` - Get comprehensive token information with risk analysis
+- `get_token_holders(token_address, cursor=None, limit=None)` - Get paginated list of token holders
+- `search_tokens(q=None, min_liquidity=None, max_liquidity=None, min_market_cap=None, max_market_cap=None, min_volume24h=None, max_volume24h=None, sort_by=None, sort_order=None, limit=None)` - Search tokens with filters
+- `get_latest_tokens(limit=None)` - Get latest newly created tokens
+- `get_multi_tokens(tokens)` - Batch request for multiple token details (up to 100 tokens)
+- `get_token_by_pool(pool_address)` - Get token information by pool address
+- `get_tokens_by_deployer(wallet_address)` - Get all tokens deployed by a specific wallet
+
+### Price & Market Data
+- `get_price(token_address, include_price_changes=None)` - Get real-time price with changes
+- `get_price_history(token_address, interval=None, start_time=None, end_time=None)` - Historical price data (intervals: 1m-1d)
+- `get_multi_prices(tokens)` - Get prices for multiple tokens in single request
+- `get_price_at_timestamp(token_address, timestamp)` - Get exact price at specific Unix timestamp
+- `get_price_ath(token_address)` - Get all-time high price data
 
 ### Wallet Analytics
-- `get_wallet_basic(address)` - Get basic wallet information
-- `get_wallet_pnl(address, days=None)` - Get wallet PnL data
-- `get_wallet_token_pnl(address, token)` - Get PnL for specific token
-- `get_wallet_trades(address, limit=None)` - Get wallet trade history
-- `get_wallet_chart(address, days=None)` - Get wallet performance chart
-- `get_wallets_batch_pnl(addresses)` - Get PnL for multiple wallets
+- `get_wallet(wallet_address)` - Get wallet token holdings with USD values
+- `get_wallet_basic(wallet_address)` - Get basic wallet information
+- `get_wallet_trades(wallet_address, cursor=None, limit=None, parse_jupiter=None, hide_arb=None)` - Paginated trading history
+- `get_pnl(wallet_address, show_historic_pnl=None)` - Detailed profit/loss analysis
+- `get_wallet_chart(wallet_address)` - Portfolio value chart data over time
 
-### Top Traders
-- `get_top_traders_all(page=None)` - Get all top traders
-- `get_top_traders_for_token(token)` - Get top traders for specific token
-- `get_top_traders_by_timeframe(timeframe)` - Get top traders by timeframe
+### Trading & Market Activity
+- `get_trades(token_address, cursor=None, limit=None)` - Real-time trades across all pools
+- `get_pool_trades(token_address, pool_address, cursor=None, limit=None)` - Pool-specific trades
+- `get_user_pool_trades(token_address, pool_address, wallet_address, cursor=None, limit=None)` - User trades in pool
+- `get_top_traders(token_address)` - Top performing traders for specific token
+- `get_first_buyers(token_address, limit=None)` - First buyers with current P&L
 
-### First Buyers
-- `get_first_buyers(token)` - Get first buyers for a token
-- `get_tokens_batch_first_buyers(tokens)` - Get first buyers for multiple tokens
+### Charts & Technical Analysis
+- `get_chart(token_address, interval=None, start_time=None, end_time=None)` - OHLCV candlestick data (intervals: 1s-1M)
+- `get_holders_chart(token_address)` - Token holder count progression
+- `get_stats(token_address, timeframe=None)` - Token statistics by timeframe
+- `get_events(token_address)` - Raw blockchain events for token analysis
 
-### AI Analysis
-- `get_ai_analysis(token_address)` - Get AI analysis for a token
+### DEX Trading (Swap API)
+- `swap(from_token, to_token, amount, slippage, payer, priority_fee=None, tx_version=None)` - Execute swaps on Pump.fun, Raydium, Meteora
+- `get_priority_fee()` - Get current priority fee estimates
 
-### API Usage
-- `get_usage_stats(days=30)` - Get your API usage statistics
-- `get_recent_usage(limit=50)` - Get recent API usage
-
-### Health Check
-- `health_check()` - Check API health status
+### Account & Utilities
+- `get_account_credits()` - Check remaining API credits
+- `get_account_subscription()` - Get subscription plan information
+- `search(q, limit=None)` - Search tokens by symbol/name/mint
 
 ## Error Handling
 
@@ -119,7 +121,7 @@ from augmentry import AugmentryClient, AugmentryError, AuthenticationError, Rate
 
 try:
     async with AugmentryClient(api_key="invalid_key") as client:
-        data = await client.get_market_stats()
+        data = await client.get_token("token_address")
 except AuthenticationError:
     print("Invalid API key")
 except RateLimitError:
@@ -130,33 +132,67 @@ except AugmentryError as e:
 
 ## Examples
 
-### Analyze Top Performing Wallets
+### Analyze Token Performance
 
 ```python
 import asyncio
 from augmentry import AugmentryClient
 
-async def analyze_top_wallets():
+async def analyze_token(token_address):
     async with AugmentryClient(api_key="your_api_key") as client:
-        # Get top traders
-        top_traders = await client.get_top_traders_all()
+        # Get comprehensive token information
+        token_info = await client.get_token(token_address)
+        print(f"Token: {token_info['name']} ({token_info['symbol']})")
+        print(f"Price: ${token_info['price']:,.6f}")
+        print(f"Market Cap: ${token_info['marketCap']:,.2f}")
         
-        # Analyze top 5 wallets
-        for trader in top_traders['data'][:5]:
-            wallet_address = trader['wallet_address']
-            
-            # Get detailed PnL
-            pnl_data = await client.get_wallet_pnl(wallet_address, days=7)
-            
-            # Get recent trades
-            trades = await client.get_wallet_trades(wallet_address, limit=10)
-            
-            print(f"Wallet: {wallet_address}")
-            print(f"7-day PnL: ${pnl_data['total_pnl']:.2f}")
-            print(f"Recent trades: {len(trades)}")
-            print("---")
+        # Get price history for last 24h
+        price_history = await client.get_price_history(
+            token_address,
+            interval="1h",
+            start_time=int(time.time() - 86400)
+        )
+        
+        # Get top traders
+        top_traders = await client.get_top_traders(token_address)
+        print(f"\nTop Traders: {len(top_traders)}")
+        
+        # Get recent trades
+        trades = await client.get_trades(token_address, limit=10)
+        print(f"Recent Trades: {len(trades['data'])}")
 
-asyncio.run(analyze_top_wallets())
+asyncio.run(analyze_token("your_token_address"))
+```
+
+### Track Wallet Performance
+
+```python
+import asyncio
+from augmentry import AugmentryClient
+
+async def track_wallet(wallet_address):
+    async with AugmentryClient(api_key="your_api_key") as client:
+        # Get wallet holdings
+        wallet = await client.get_wallet(wallet_address)
+        total_value = sum(token['usdValue'] for token in wallet['tokens'])
+        print(f"Total Portfolio Value: ${total_value:,.2f}")
+        
+        # Get PnL data
+        pnl = await client.get_pnl(wallet_address, show_historic_pnl=True)
+        print(f"Total PnL: ${pnl['totalPnL']:,.2f}")
+        print(f"24h PnL: ${pnl['pnl24h']:,.2f}")
+        print(f"30d PnL: ${pnl['pnl30d']:,.2f}")
+        
+        # Get recent trades
+        trades = await client.get_wallet_trades(
+            wallet_address,
+            limit=20,
+            parse_jupiter=True,
+            hide_arb=True
+        )
+        print(f"\nRecent Trades: {len(trades['data'])}")
+
+asyncio.run(track_wallet("your_wallet_address"))
 ```
 
 ### Monitor New Token Launches
@@ -168,52 +204,110 @@ from augmentry import AugmentryClient
 async def monitor_new_tokens():
     async with AugmentryClient(api_key="your_api_key") as client:
         # Get latest tokens
-        new_tokens = await client.get_new_tokens(limit=20)
+        new_tokens = await client.get_latest_tokens(limit=10)
         
         for token in new_tokens:
-            # Get first buyers for each token
-            first_buyers = await client.get_first_buyers(token['mint'])
+            # Get detailed token info
+            token_info = await client.get_token(token['mint'])
             
-            # Get AI analysis
-            try:
-                analysis = await client.get_ai_analysis(token['mint'])
-                sentiment = analysis.get('sentiment', 'Unknown')
-            except:
-                sentiment = 'N/A'
+            # Get first buyers
+            first_buyers = await client.get_first_buyers(token['mint'], limit=5)
             
-            print(f"Token: {token['name']} ({token['symbol']})")
-            print(f"Market Cap: ${token.get('market_cap', 0):,.2f}")
+            # Check holder count
+            holders = await client.get_token_holders(token['mint'], limit=1)
+            
+            print(f"\nToken: {token_info['name']} ({token_info['symbol']})")
+            print(f"Mint: {token['mint']}")
+            print(f"Liquidity: ${token_info.get('liquidity', 0):,.2f}")
+            print(f"Holders: {holders.get('total', 0)}")
             print(f"First Buyers: {len(first_buyers)}")
-            print(f"AI Sentiment: {sentiment}")
-            print("---")
+            
+            # Show first buyer profits
+            for buyer in first_buyers[:3]:
+                print(f"  - {buyer['wallet']}: ${buyer.get('pnl', 0):,.2f} PnL")
 
 asyncio.run(monitor_new_tokens())
 ```
 
-### Track Portfolio Performance
+### Execute DEX Swap
 
 ```python
 import asyncio
 from augmentry import AugmentryClient
 
-async def track_portfolio(wallet_addresses):
+async def execute_swap():
     async with AugmentryClient(api_key="your_api_key") as client:
-        # Get batch PnL data
-        batch_pnl = await client.get_wallets_batch_pnl(wallet_addresses)
+        # Get current priority fee
+        priority_fee = await client.get_priority_fee()
         
-        total_pnl = 0
-        for wallet_data in batch_pnl['data']:
-            wallet_pnl = wallet_data['total_pnl']
-            total_pnl += wallet_pnl
-            
-            print(f"Wallet: {wallet_data['wallet_address']}")
-            print(f"PnL: ${wallet_pnl:,.2f}")
-            
-        print(f"\nTotal Portfolio PnL: ${total_pnl:,.2f}")
+        # Execute swap
+        swap_result = await client.swap(
+            from_token="So11111111111111111111111111111111111111112",  # SOL
+            to_token="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",   # USDC
+            amount=1.0,  # 1 SOL
+            slippage=0.5,  # 0.5%
+            payer="your_wallet_address",
+            priority_fee=priority_fee['medium']
+        )
+        
+        print(f"Swap transaction: {swap_result['txid']}")
 
-# Example usage
-wallets = ["wallet1", "wallet2", "wallet3"]
-asyncio.run(track_portfolio(wallets))
+asyncio.run(execute_swap())
+```
+
+### Search and Filter Tokens
+
+```python
+import asyncio
+from augmentry import AugmentryClient
+
+async def search_tokens():
+    async with AugmentryClient(api_key="your_api_key") as client:
+        # Search tokens with filters
+        results = await client.search_tokens(
+            q="BONK",  # Search query
+            min_liquidity=10000,  # Min $10k liquidity
+            max_liquidity=1000000,  # Max $1M liquidity
+            min_volume24h=5000,  # Min $5k daily volume
+            sort_by="volume24h",
+            sort_order="desc",
+            limit=10
+        )
+        
+        for token in results['data']:
+            print(f"\nToken: {token['name']} ({token['symbol']})")
+            print(f"Liquidity: ${token['liquidity']:,.2f}")
+            print(f"24h Volume: ${token['volume24h']:,.2f}")
+            print(f"Market Cap: ${token['marketCap']:,.2f}")
+
+asyncio.run(search_tokens())
+```
+
+### Get Historical Price Data
+
+```python
+import asyncio
+from augmentry import AugmentryClient
+import time
+
+async def get_price_analysis(token_address):
+    async with AugmentryClient(api_key="your_api_key") as client:
+        # Get current price with changes
+        current = await client.get_price(token_address, include_price_changes=True)
+        print(f"Current Price: ${current['price']:,.6f}")
+        print(f"24h Change: {current['change24h']:.2f}%")
+        
+        # Get ATH data
+        ath = await client.get_price_ath(token_address)
+        print(f"\nAll-Time High: ${ath['price']:,.6f}")
+        print(f"ATH Date: {ath['timestamp']}")
+        
+        # Get price at specific time (1 week ago)
+        week_ago = int(time.time()) - (7 * 24 * 3600)
+        historical = await client.get_price_at_timestamp(token_address, week_ago)
+        print(f"\nPrice 1 week ago: ${historical['price']:,.6f}")
+
+asyncio.run(get_price_analysis("your_token_address"))
 ```
 
 ## Rate Limits
